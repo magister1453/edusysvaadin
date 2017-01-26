@@ -26,5 +26,7 @@ public class DataLoader implements ApplicationRunner {
     public void run(ApplicationArguments applicationArguments) throws Exception {
         authorityRepository.save(new Authorities("ADMIN"));
         userRepository.save(new User("admin", "$2a$06$U8xL2XI7.xPhJmKfl7/BVu4XcOplsSjbSG5W85U.fNdhfPJy6M1NO", "admin", "admin", authorityRepository.findOne(1L)));
+        userRepository.save(new User("superadmin", "$2a$06$U8xL2XI7.xPhJmKfl7/BVu4XcOplsSjbSG5W85U.fNdhfPJy6M1NO", "superadmin", "superadmin", authorityRepository.findOne(1L)));
+        userRepository.save(new User("MarcTest", "$2a$06$U8xL2XI7.xPhJmKfl7/BVu4XcOplsSjbSG5W85U.fNdhfPJy6M1NO", "Marc", "Marais", authorityRepository.findOne(1L)));
     }
 }

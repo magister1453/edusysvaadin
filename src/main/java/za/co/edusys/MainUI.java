@@ -5,16 +5,19 @@ import com.vaadin.annotations.Title;
 import com.vaadin.navigator.Navigator;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.spring.annotation.SpringUI;
+import com.vaadin.spring.navigator.SpringViewProvider;
 import com.vaadin.ui.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.label.MLabel;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
-import org.vaadin.viritin.layouts.MWindow;
-import za.co.edusys.domain.model.User;
+import za.co.edusys.domain.repository.UserRepository;
 import za.co.edusys.views.DashBoardView;
-import za.co.edusys.views.UserView;
+import za.co.edusys.views.user.UserListView;
+
+import static com.vaadin.ui.themes.ValoTheme.BUTTON_LINK;
 
 
 @SpringUI(path = "/main")
@@ -23,12 +26,13 @@ import za.co.edusys.views.UserView;
 public class MainUI extends UI{
 
     public static Navigator navigator;
-    public static final String USER_VIEW = "/user";
+    public static final String USER_VIEW = "/userlist";
+    @Autowired
+    SpringViewProvider viewProvider;
 
     @Override
     protected void init(VaadinRequest vaadinRequest) {
         VerticalLayout components = new MVerticalLayout(initHeader(), initMain(), initFooter());
-//        navigator = new Navigator(this, dataPanel);
 //        navigator.addView(USER_VIEW, new UserView());
 //        navigator.addView("", new DashBoardView());
 //        User user = (User)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -37,10 +41,6 @@ public class MainUI extends UI{
     }
 
     public VerticalLayout initHeader(){
-        for(Window window : this.getWindows()) {
-            System.out.println(window.getHeight());
-        }
-
         Label headerLabel = new MLabel("This is the Header").withHeight("70%").withFullWidth();
         Button logoutButton = new MButton("Logout", this::logoutButtonClick).withHeight("30%").withWidth("10%");
         VerticalLayout headerLayout = new MVerticalLayout(headerLabel, logoutButton).withHeight("240px").withFullWidth();
@@ -49,20 +49,35 @@ public class MainUI extends UI{
     }
 
     public HorizontalLayout initMain(){
-        Label accordianLabel = new MLabel("This is the accordian label").withWidth("20%").withFullHeight();
-        Label mainLabel = new MLabel("This is the main label").withWidth("60%").withFullHeight();
+        Accordion accordionMenu = initAccordianMenu();
+        VerticalLayout dataLayout = new MVerticalLayout().withFullHeight().withFullWidth();
+        UserListView userView = new UserListView();
+        dataLayout.addComponent(userView);
+        navigator = new Navigator(this, dataLayout);
+        navigator.addProvider(viewProvider);
         Label rightLabel = new MLabel("This is the right label").withWidth("20%").withFullHeight();
-        HorizontalLayout horizontalLayout = new MHorizontalLayout(accordianLabel, mainLabel, rightLabel).withHeight("600px").withFullWidth();
-        horizontalLayout.setComponentAlignment(accordianLabel, Alignment.MIDDLE_CENTER);
-        horizontalLayout.setComponentAlignment(mainLabel, Alignment.MIDDLE_CENTER);
+        HorizontalLayout horizontalLayout = new MHorizontalLayout(accordionMenu, dataLayout, rightLabel).withHeight("600px").withFullWidth();
+        horizontalLayout.setComponentAlignment(accordionMenu, Alignment.TOP_LEFT);
+        horizontalLayout.setComponentAlignment(dataLayout, Alignment.MIDDLE_CENTER);
         horizontalLayout.setComponentAlignment(rightLabel, Alignment.MIDDLE_CENTER);
         return horizontalLayout;
     }
 
+    private Accordion initAccordianMenu() {
+        Accordion accordion = new Accordion();
+        Layout tab1 = new VerticalLayout(
+                new MButton("User Admin", (e -> getUI().getNavigator().navigateTo("userList"))).withStyleName(BUTTON_LINK),
+                new MButton("Main Admin", (e -> getUI().getNavigator().navigateTo(""))).withStyleName(BUTTON_LINK));
+        accordion.addTab(tab1, "Main Tab");
+        accordion.setWidth("20%");
+        accordion.setResponsive(true);
+        return accordion;
+    }
+
     public VerticalLayout initFooter(){
         VerticalLayout verticalLayout = new MVerticalLayout(new MLabel("This is the footer").withFullHeight()).withHeight("240px").withFullWidth();
-        
-        return ;
+
+        return verticalLayout;
     }
 
     public void logoutButtonClick(Button.ClickEvent e) {

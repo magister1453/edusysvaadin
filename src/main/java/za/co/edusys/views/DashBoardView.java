@@ -12,7 +12,7 @@ import za.co.edusys.MainUI;
 /**
  * Created by marc.marais on 2017/01/08.
  */
-@SpringView
+@SpringView(name = "")
 public class DashBoardView extends VerticalLayout implements View{
     private Navigator navigator = MainUI.navigator;
 

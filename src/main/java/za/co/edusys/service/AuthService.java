@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import za.co.edusys.domain.model.User;
 import za.co.edusys.domain.repository.UserRepository;
 
+import java.util.List;
+
 @Service("authService")
 public class AuthService implements UserDetailsService {
 
@@ -19,4 +21,7 @@ public class AuthService implements UserDetailsService {
         return userRepository.findUserByUserName(userName);
     }
 
+    public Iterable<User> getAllUsers(){
+        return userRepository.findAll();
+    }
 }

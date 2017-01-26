@@ -22,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.vaadin.viritin.fields.MPasswordField;
 import org.vaadin.viritin.fields.MTextField;
 import org.vaadin.viritin.layouts.MVerticalLayout;
+import za.co.edusys.domain.repository.UserRepository;
 
 @SpringUI(path = "/login")
 @Title("LoginPage")

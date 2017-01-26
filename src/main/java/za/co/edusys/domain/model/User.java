@@ -85,6 +85,11 @@ public class User implements UserDetails {
         this.id = id;
     }
 
+
+    public Long getId() {
+        return id;
+    }
+
     public void setAuthorities(List<Authorities> authorities) {
         this.authorities = authorities;
     }
@@ -127,6 +132,30 @@ public class User implements UserDetails {
 
     public void setSurname(String surname) {
         this.surname = surname;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public Boolean getAccountNonExpired() {
+        return accountNonExpired;
+    }
+
+    public Boolean getAccountNonLocked() {
+        return accountNonLocked;
+    }
+
+    public Boolean getCredentialsNonExpired() {
+        return credentialsNonExpired;
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public BCryptPasswordEncoder getPasswordEncoder() {
+        return passwordEncoder;
     }
 }
 
