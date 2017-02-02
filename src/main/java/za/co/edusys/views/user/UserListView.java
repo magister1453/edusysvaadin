@@ -1,20 +1,26 @@
 package za.co.edusys.views.user;
 
+import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.vaadin.pagingcomponent.PagingComponent;
+import org.vaadin.viritin.BeanBinder;
 import org.vaadin.viritin.LazyList;
+import org.vaadin.viritin.ListContainer;
+import org.vaadin.viritin.MBeanFieldGroup;
 import org.vaadin.viritin.button.MButton;
-import org.vaadin.viritin.fields.MPasswordField;
+import org.vaadin.viritin.fields.LazyComboBox;
 import org.vaadin.viritin.fields.MTextField;
 import org.vaadin.viritin.grid.MGrid;
 import org.vaadin.viritin.layouts.MFormLayout;
 import za.co.edusys.domain.model.User;
 import za.co.edusys.domain.repository.AuthorityRepository;
 import za.co.edusys.domain.repository.UserRepository;
-import za.co.edusys.views.LimitedGrid;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
@@ -32,14 +38,13 @@ public class UserListView extends VerticalLayout implements View {
 
     private FormLayout userForm;
     private User selectedUser;
-    private LimitedGrid<User> userListGrid;
+    private MGrid<User> userListGrid;
 
     @PostConstruct
     void init() {
-        List<User> users = new ArrayList<>();
-        userRepository.findAll().forEach(user -> users.add(user));
-        userListGrid = new LimitedGrid<>();
-        userListGrid.setLimitedRows(User.class, users, "firstName", "surname", "enabled");
+        userListGrid = new MGrid<User>().withProperties("firstName", "surname", "enabled")
+                .withColumnHeaders("First Name", "Surname", "Enabled");
+
         userListGrid.addSelectionListener(selectionEvent -> { // Java 8
             // Get selection from the selection model
             selectedUser = (User)((Grid.SingleSelectionModel)
@@ -51,7 +56,6 @@ public class UserListView extends VerticalLayout implements View {
             else
                 Notification.show("Nothing selected");
         });
-        userListGrid.setHeightByRows(users.size());
         addComponent(userListGrid);
         addComponent(new Button("Create User", this::createUser));
         addComponent(initUserForm());
@@ -95,23 +99,21 @@ public class UserListView extends VerticalLayout implements View {
                     authRepository.findOne(3L)
             );
             userRepository.save(newUser);
-            refreshData();
             Notification.show("User " + newUser.getFirstName() + " " + newUser.getSurname() + " succesfully created.");
-            userForm.setVisible(false);
         } else {
             User updatedUser = userRepository.findOne(selectedUser.getId());
             updatedUser = updateUser(updatedUser);
             userRepository.save(updatedUser);
-            refreshData();
             Notification.show("User " + updatedUser.getFirstName() + " " + updatedUser.getSurname() + " succesfully updated.");
-            userForm.setVisible(false);
         }
+        refreshData();
+        userForm.setVisible(false);
     }
 
     private void refreshData() {
         List<User> users = new ArrayList<>();
         userRepository.findAll().forEach(user -> users.add(user));
-        userListGrid.setLimitedRows(User.class, users, "firstName", "surname", "enabled");
+        userListGrid.setRows(users);
     }
 
     private User updateUser(User updateUser){
