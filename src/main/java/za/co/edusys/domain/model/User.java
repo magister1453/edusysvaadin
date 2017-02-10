@@ -4,13 +4,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Component;
 
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 @Entity
+@Component
 public class User implements UserDetails {
 
     @Id
@@ -26,20 +26,21 @@ public class User implements UserDetails {
     Boolean enabled;
     String firstName;
     String surname;
+    Role role;
 
     public User() {};
 
-    public User(String userName, String password, String firstName, String surname, Authorities authority){
+    public User(String userName, String password, String firstName, String surname, Role role){
         this.accountNonExpired = true;
         this.accountNonLocked = true;
         this.credentialsNonExpired = true;
         this.enabled = true;
         this.userName = userName;
-        this.password = password;
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        this.password = encoder.encode(password);
         this.firstName = firstName;
         this.surname = surname;
-        authorities = new ArrayList<>();
-        authorities.add(authority);
+        this.role = role;
     }
 
     @Autowired
@@ -156,6 +157,14 @@ public class User implements UserDetails {
 
     public BCryptPasswordEncoder getPasswordEncoder() {
         return passwordEncoder;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 }
 

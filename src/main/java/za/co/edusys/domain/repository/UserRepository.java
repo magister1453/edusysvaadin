@@ -1,6 +1,7 @@
 package za.co.edusys.domain.repository;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -13,5 +14,5 @@ import java.util.List;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     User findUserByUserName(String userName);
-    List<User> findAllBy(Pageable pageable);
+    List<User> findBySurnameContainingOrFirstNameContaining(String surname, String firstName, Pageable pageable);
 }

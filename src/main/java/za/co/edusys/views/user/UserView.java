@@ -1,34 +1,27 @@
 package za.co.edusys.views.user;
 
-import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.vaadin.pagingcomponent.PagingComponent;
-import org.vaadin.viritin.BeanBinder;
-import org.vaadin.viritin.LazyList;
-import org.vaadin.viritin.ListContainer;
-import org.vaadin.viritin.MBeanFieldGroup;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.vaadin.viritin.button.MButton;
-import org.vaadin.viritin.fields.LazyComboBox;
 import org.vaadin.viritin.fields.MTextField;
 import org.vaadin.viritin.grid.MGrid;
 import org.vaadin.viritin.layouts.MFormLayout;
+import za.co.edusys.PageableComponent;
+import za.co.edusys.domain.model.Role;
 import za.co.edusys.domain.model.User;
 import za.co.edusys.domain.repository.AuthorityRepository;
 import za.co.edusys.domain.repository.UserRepository;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
 
 @SpringView(name = "userList")
-public class UserListView extends VerticalLayout implements View {
+public class UserView extends VerticalLayout implements View {
 
     @Autowired
     UserRepository userRepository;
@@ -39,14 +32,18 @@ public class UserListView extends VerticalLayout implements View {
     private FormLayout userForm;
     private User selectedUser;
     private MGrid<User> userListGrid;
+    private PageableComponent pageableComponent;
+    private TextField firstNameField;
+    private TextField surnameField;
+    private TextField userNameField;
+    private ComboBox roleComboBox;
 
     @PostConstruct
     void init() {
         userListGrid = new MGrid<User>().withProperties("firstName", "surname", "enabled")
                 .withColumnHeaders("First Name", "Surname", "Enabled");
 
-        userListGrid.addSelectionListener(selectionEvent -> { // Java 8
-            // Get selection from the selection model
+        userListGrid.addSelectionListener(selectionEvent -> {
             selectedUser = (User)((Grid.SingleSelectionModel)
                     userListGrid.getSelectionModel()).getSelectedRow();
 
@@ -56,15 +53,15 @@ public class UserListView extends VerticalLayout implements View {
             else
                 Notification.show("Nothing selected");
         });
-        addComponent(userListGrid);
+        pageableComponent = new PageableComponent(userListGrid, userRepository);
+        addComponent(pageableComponent);
         addComponent(new Button("Create User", this::createUser));
         addComponent(initUserForm());
     }
-    void showUserDetails(User user){
+
+    private void showUserDetails(User user){
         userForm.setVisible(true);
-        TextField firstNameField = (MTextField) userForm.getComponent(0);
-        TextField surnameField = (MTextField) userForm.getComponent(1);
-        TextField userNameField = (MTextField) userForm.getComponent(2);
+        getUI().setFocusedComponent(firstNameField);
         if(user != null) {
             firstNameField.setValue(user.getFirstName());
             surnameField.setValue(user.getSurname());
@@ -76,27 +73,37 @@ public class UserListView extends VerticalLayout implements View {
         }
     }
 
-    FormLayout initUserForm(){
-        TextField firstNameField = new MTextField("First Name:").withRequired(true);
-        TextField surnameField = new MTextField("Surname:").withRequired(true);
-        TextField userNameField = new MTextField("User Name:").withRequired(true);
-        userForm = new MFormLayout(firstNameField, surnameField, userNameField, new MButton("Save",this::addEditUser)).withVisible(false);
+    private FormLayout initUserForm(){
+        firstNameField = new MTextField("First Name:").withRequired(true);
+        surnameField = new MTextField("Surname:").withRequired(true);
+        userNameField = new MTextField("User Name:").withRequired(true);
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        roleComboBox = new ComboBox("Role", Arrays.asList(Role.values()));
+        if(!user.getRole().equals(Role.SUPERADMIN)){
+            roleComboBox.removeItem(Role.SUPERADMIN);
+        }
+        userForm = new MFormLayout(firstNameField, surnameField, userNameField, roleComboBox, new MButton("Save",this::addEditUser), new MButton("Cancel", this::cancelUser)).withVisible(false);
         return userForm;
     }
 
-    public void createUser(Button.ClickEvent e){
+    private void createUser(Button.ClickEvent e){
         selectedUser = null;
         showUserDetails(null);
     }
 
-    public void addEditUser(Button.ClickEvent e){
+    private void cancelUser(Button.ClickEvent e){
+        userForm.setVisible(false);
+        pageableComponent.setVisible(true);
+    }
+
+    private void addEditUser(Button.ClickEvent e){
         if(selectedUser == null){
             User newUser = new User(
-                    ((MTextField) userForm.getComponent(2)).getValue(),
-                    ((MTextField) userForm.getComponent(0)).getValue() + 123,
-                    ((MTextField) userForm.getComponent(0)).getValue(),
-                    ((MTextField) userForm.getComponent(1)).getValue(),
-                    authRepository.findOne(3L)
+                    userNameField.getValue(),
+                    firstNameField.getValue() + 123,
+                    firstNameField.getValue(),
+                    surnameField.getValue(),
+                    (Role)roleComboBox.getValue()
             );
             userRepository.save(newUser);
             Notification.show("User " + newUser.getFirstName() + " " + newUser.getSurname() + " succesfully created.");
@@ -106,20 +113,15 @@ public class UserListView extends VerticalLayout implements View {
             userRepository.save(updatedUser);
             Notification.show("User " + updatedUser.getFirstName() + " " + updatedUser.getSurname() + " succesfully updated.");
         }
-        refreshData();
+        pageableComponent.refreshData();
         userForm.setVisible(false);
     }
 
-    private void refreshData() {
-        List<User> users = new ArrayList<>();
-        userRepository.findAll().forEach(user -> users.add(user));
-        userListGrid.setRows(users);
-    }
-
     private User updateUser(User updateUser){
-        updateUser.setFirstName(((MTextField) userForm.getComponent(0)).getValue());
-        updateUser.setSurname(((MTextField) userForm.getComponent(1)).getValue());
-        updateUser.setUserName(((MTextField) userForm.getComponent(2)).getValue());
+        updateUser.setFirstName(firstNameField.getValue());
+        updateUser.setSurname(surnameField.getValue());
+        updateUser.setUserName(userNameField.getValue());
+        updateUser.setRole((Role)roleComboBox.getValue());
         return updateUser;
     }
 

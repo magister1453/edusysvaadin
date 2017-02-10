@@ -5,7 +5,6 @@ import com.vaadin.annotations.Title;
 import com.vaadin.navigator.Navigator;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.spring.annotation.SpringUI;
-import com.vaadin.spring.navigator.SpringNavigator;
 import com.vaadin.spring.navigator.SpringViewProvider;
 import com.vaadin.ui.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +13,7 @@ import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.label.MLabel;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
-import za.co.edusys.domain.repository.UserRepository;
-import za.co.edusys.views.DashBoardView;
-import za.co.edusys.views.user.UserListView;
+import za.co.edusys.views.user.UserView;
 
 import static com.vaadin.ui.themes.ValoTheme.BUTTON_LINK;
 
@@ -52,7 +49,7 @@ public class MainUI extends UI{
     public HorizontalLayout initMain(){
         Accordion accordionMenu = initAccordianMenu();
         VerticalLayout dataLayout = new MVerticalLayout().withFullHeight().withFullWidth();
-        UserListView userView = new UserListView();
+        UserView userView = new UserView();
         dataLayout.addComponent(userView);
         navigator = new Navigator(this, dataLayout);
         navigator.addProvider(viewProvider);

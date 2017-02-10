@@ -5,6 +5,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 import za.co.edusys.domain.model.Authorities;
+import za.co.edusys.domain.model.Role;
 import za.co.edusys.domain.model.User;
 import za.co.edusys.domain.repository.AuthorityRepository;
 import za.co.edusys.domain.repository.UserRepository;
@@ -25,8 +26,12 @@ public class DataLoader implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments applicationArguments) throws Exception {
         authorityRepository.save(new Authorities("ADMIN"));
-        userRepository.save(new User("admin", "$2a$06$U8xL2XI7.xPhJmKfl7/BVu4XcOplsSjbSG5W85U.fNdhfPJy6M1NO", "admin", "admin", authorityRepository.findOne(1L)));
-        userRepository.save(new User("superadmin", "$2a$06$U8xL2XI7.xPhJmKfl7/BVu4XcOplsSjbSG5W85U.fNdhfPJy6M1NO", "superadmin", "superadmin", authorityRepository.findOne(1L)));
-        userRepository.save(new User("MarcTest", "$2a$06$U8xL2XI7.xPhJmKfl7/BVu4XcOplsSjbSG5W85U.fNdhfPJy6M1NO", "Marc", "Marais", authorityRepository.findOne(1L)));
+        userRepository.save(new User("admin", "admin", "admin", "admin", Role.ADMIN));
+        userRepository.save(new User("superadmin", "superadmin", "superadmin", "superadmin", Role.SUPERADMIN));
+        userRepository.save(new User("MarcTest", "marctest", "Marc", "Marais", Role.PARENT));
+        userRepository.save(new User("Test1", "1", "Test1", "Test1", Role.TEACHER));
+        userRepository.save(new User("Test2", "2", "Test2", "Test2", Role.PARENT));
+        userRepository.save(new User("Test3", "3", "Test3", "Test3", Role.PARENT));
+        userRepository.save(new User("Test4", "4", "Test4", "Test4", Role.PARENT));
     }
 }
