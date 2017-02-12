@@ -3,26 +3,22 @@ package za.co.edusys.domain.model;
 import javax.persistence.*;
 import java.util.Set;
 
-/**
- * Created by marc.marais on 2017/02/10.
- */
 @Entity
-public class School {
+public class Grade {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     Long id;
     String name;
     boolean enabled;
-    @OneToMany(mappedBy = "school")
-    Set<User> userList;
+    @ManyToOne(fetch = FetchType.EAGER, optional = true)
+    School school;
     @OneToMany(mappedBy = "grade")
-    Set<Grade> gradeList;
+    Set<User> userList;
 
+    public Grade(){}
 
-    public School(){}
-
-    public School(String name, boolean enabled) {
+    public Grade(String name, boolean enabled) {
         this.name = name;
         this.enabled = enabled;
     }
@@ -60,11 +56,11 @@ public class School {
         this.userList = userList;
     }
 
-    public Set<Grade> getGradeList() {
-        return gradeList;
+    public School getSchool() {
+        return school;
     }
 
-    public void setGradeList(Set<Grade> gradeList) {
-        this.gradeList = gradeList;
+    public void setSchool(School school) {
+        this.school = school;
     }
 }

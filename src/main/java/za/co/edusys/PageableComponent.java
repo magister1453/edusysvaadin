@@ -39,9 +39,9 @@ public class PageableComponent extends VerticalLayout{
         searchField.addValueChangeListener(valueChangeEvent -> {
             thisPage = 0;
             if(((String)valueChangeEvent.getProperty().getValue()).length() >= 3){
-                ((MGrid)this.dataComponent).setRows(Utils.getDataForGenericRepo(repository, searchField.getValue(), new PageRequest(thisPage, numPerPage)));
+                ((MGrid)this.dataComponent).setRows(Utils.getDataForGenericRepo(repository, new PageRequest(thisPage, numPerPage), searchField.getValue()));
             } else {
-                ((MGrid)this.dataComponent).setRows(this.repository.findAll(new PageRequest(thisPage, numPerPage)).getContent());
+                ((MGrid)this.dataComponent).setRows(Utils.getDataForGenericRepo(repository, new PageRequest(thisPage, numPerPage), ""));
             }
         });
         pageComboBox = new ComboBox("Number of items per page", Arrays.asList(2,5,10,20,50));
@@ -61,7 +61,7 @@ public class PageableComponent extends VerticalLayout{
         HorizontalLayout paginationLayout = new HorizontalLayout();
         this.nextButton = new MButton("Next").withStyleName(BUTTON_LINK);
         this.nextButton.addClickListener(clickEvent -> {
-            List list =  Utils.getDataForGenericRepo(repository, searchField.getValue(), new PageRequest(++thisPage, numPerPage));
+            List list =  Utils.getDataForGenericRepo(repository, new PageRequest(++thisPage, numPerPage), searchField.getValue());
             if(list.size() != 0)
                 ((MGrid)this.dataComponent).setRows(list);
             else
@@ -70,19 +70,19 @@ public class PageableComponent extends VerticalLayout{
         this.previousButton = new MButton("Previous").withStyleName(BUTTON_LINK);
         this.previousButton.addClickListener(clickEvent -> {
             if(thisPage > 0) {
-                ((MGrid) this.dataComponent).setRows(Utils.getDataForGenericRepo(repository, searchField.getValue(), new PageRequest(--thisPage, numPerPage)));
+                ((MGrid) this.dataComponent).setRows(Utils.getDataForGenericRepo(repository, new PageRequest(--thisPage, numPerPage), searchField.getValue()));
             }
         });
         this.firstButton = new MButton("First").withStyleName(BUTTON_LINK);
         this.firstButton.addClickListener(clickEvent -> {
             thisPage = 0;
-            ((MGrid)this.dataComponent).setRows(Utils.getDataForGenericRepo(repository, searchField.getValue(), new PageRequest(thisPage, numPerPage)));
+            ((MGrid)this.dataComponent).setRows(Utils.getDataForGenericRepo(repository, new PageRequest(thisPage, numPerPage), searchField.getValue()));
         });
         this.lastButton = new MButton("Last").withStyleName(BUTTON_LINK);
         this.lastButton.addClickListener(clickEvent -> {
             //TODO fix bug with last on search
             thisPage = (int)(this.repository.count()/numPerPage);
-            ((MGrid)this.dataComponent).setRows(Utils.getDataForGenericRepo(repository, searchField.getValue(), new PageRequest(thisPage, numPerPage)));
+            ((MGrid)this.dataComponent).setRows(Utils.getDataForGenericRepo(repository, new PageRequest(thisPage, numPerPage), searchField.getValue()));
         });
         paginationLayout.addComponent(pageComboBox);
         paginationLayout.addComponent(firstButton);
@@ -94,6 +94,6 @@ public class PageableComponent extends VerticalLayout{
 
     public void refreshData() {
         if(this.dataComponent instanceof MGrid)
-            ((MGrid)this.dataComponent).setRows(Utils.getDataForGenericRepo(repository, searchField.getValue(), new PageRequest(thisPage, numPerPage)));
+            ((MGrid)this.dataComponent).setRows(Utils.getDataForGenericRepo(repository, new PageRequest(thisPage, numPerPage), searchField.getValue()));
     }
 }

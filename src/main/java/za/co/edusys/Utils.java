@@ -3,6 +3,11 @@ package za.co.edusys;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
+import za.co.edusys.domain.model.Role;
+import za.co.edusys.domain.model.School;
+import za.co.edusys.domain.model.User;
+import za.co.edusys.domain.repository.SchoolRepository;
 import za.co.edusys.domain.repository.UserRepository;
 
 import java.util.ArrayList;
@@ -13,17 +18,18 @@ import java.util.List;
  */
 public class Utils {
 
-    public static boolean listStringEqualsIgnoreCase(String toFind, List<String> possibleList){
-        for(String listItem: possibleList){
-            if(listItem.equalsIgnoreCase(toFind))
-                return true;
+    public static List getDataForGenericRepo(JpaRepository repository, PageRequest paginationParam, Object... searchParam ){
+        if(repository instanceof UserRepository) {
+            User loggedInUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if(loggedInUser.getRole().equals(Role.SUPERADMIN))
+                return ((UserRepository) repository).findBySurnameContainingOrFirstNameContaining((String)searchParam[0], (String)searchParam[0], paginationParam);
+            else
+                return ((UserRepository) repository).getAdminUsers(loggedInUser.getSchool(), "%" + searchParam[0] + "%", "%" + searchParam[0] + "%",
+                        paginationParam);
         }
-        return false;
-    }
-
-    public static List getDataForGenericRepo(JpaRepository repository, String searchParam, PageRequest paginationParam){
-        if(repository instanceof UserRepository)
-            return ((UserRepository) repository).findBySurnameContainingOrFirstNameContaining(searchParam, searchParam, paginationParam);
+        else if (repository instanceof SchoolRepository) {
+            return ((SchoolRepository) repository).findByNameContainingIgnoreCase((String)searchParam[0], paginationParam);
+        }
         else
             return new ArrayList();
     }

@@ -1,5 +1,6 @@
 package za.co.edusys.domain.model;
 
+import jdk.nashorn.internal.runtime.options.Option;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import javax.persistence.*;
 import java.util.List;
+import java.util.Optional;
 
 @Entity
 @Component
@@ -27,10 +29,14 @@ public class User implements UserDetails {
     String firstName;
     String surname;
     Role role;
+    @ManyToOne(fetch = FetchType.EAGER, optional = true)
+    School school;
+    @ManyToOne(fetch = FetchType.EAGER, optional = true)
+    Grade grade;
 
     public User() {};
 
-    public User(String userName, String password, String firstName, String surname, Role role){
+    public User(String userName, String password, String firstName, String surname, Role role, Optional<School> school, Optional<Grade> grade){
         this.accountNonExpired = true;
         this.accountNonLocked = true;
         this.credentialsNonExpired = true;
@@ -41,6 +47,9 @@ public class User implements UserDetails {
         this.firstName = firstName;
         this.surname = surname;
         this.role = role;
+        this.school = school.orElse(null);
+        this.grade = grade.orElse(null);
+
     }
 
     @Autowired
@@ -165,6 +174,14 @@ public class User implements UserDetails {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public School getSchool() {
+        return school;
+    }
+
+    public void setSchool(School school) {
+        this.school = school;
     }
 }
 

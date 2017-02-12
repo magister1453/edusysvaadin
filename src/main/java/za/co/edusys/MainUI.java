@@ -13,6 +13,7 @@ import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.label.MLabel;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
+import za.co.edusys.views.user.SchoolView;
 import za.co.edusys.views.user.UserView;
 
 import static com.vaadin.ui.themes.ValoTheme.BUTTON_LINK;
@@ -24,7 +25,9 @@ import static com.vaadin.ui.themes.ValoTheme.BUTTON_LINK;
 public class MainUI extends UI{
 
     public static Navigator navigator;
-    public static final String USER_VIEW = "/userlist";
+    public static final String USER_VIEW = "/user";
+    public static final String SCHOOL_VIEW = "/school";
+    public VerticalLayout dataLayout;
     @Autowired
     SpringViewProvider viewProvider;
 
@@ -48,10 +51,12 @@ public class MainUI extends UI{
 
     public HorizontalLayout initMain(){
         Accordion accordionMenu = initAccordianMenu();
-        VerticalLayout dataLayout = new MVerticalLayout().withFullHeight().withFullWidth();
+        dataLayout = new MVerticalLayout().withFullHeight().withFullWidth();
         UserView userView = new UserView();
         dataLayout.addComponent(userView);
         navigator = new Navigator(this, dataLayout);
+        navigator.addView(USER_VIEW, new UserView());
+        navigator.addView(SCHOOL_VIEW, new SchoolView());
         navigator.addProvider(viewProvider);
         Label rightLabel = new MLabel("This is the right label").withWidth("20%").withFullHeight();
         HorizontalLayout horizontalLayout = new MHorizontalLayout(accordionMenu, dataLayout, rightLabel).withHeight("600px").withFullWidth();
@@ -64,7 +69,8 @@ public class MainUI extends UI{
     private Accordion initAccordianMenu() {
         Accordion accordion = new Accordion();
         Layout tab1 = new VerticalLayout(
-                new MButton("User Admin", (e -> getUI().getNavigator().navigateTo("userList"))).withStyleName(BUTTON_LINK),
+                new MButton("User Admin", (e -> getUI().getNavigator().navigateTo("user"))).withStyleName(BUTTON_LINK),
+                new MButton("School Admin", (e -> getUI().getNavigator().navigateTo("school"))).withStyleName(BUTTON_LINK),
                 new MButton("Main Admin", (e -> getUI().getNavigator().navigateTo(""))).withStyleName(BUTTON_LINK));
         accordion.addTab(tab1, "Main Tab");
         accordion.setWidth("20%");
