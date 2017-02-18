@@ -1,6 +1,10 @@
 package za.co.edusys.domain.model;
 
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
+
 import javax.persistence.*;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -16,15 +20,19 @@ public class School {
     boolean enabled;
     @OneToMany(mappedBy = "school")
     Set<User> userList;
-    @OneToMany(mappedBy = "grade")
-    Set<Grade> gradeList;
+    @LazyCollection(LazyCollectionOption.FALSE)
+    @ElementCollection(targetClass = Grade.class)
+    @CollectionTable(name = "schoolgrade", joinColumns = @JoinColumn(name = "school_id"))
+    @Enumerated(EnumType.STRING)
+    List<Grade> grades;
 
 
     public School(){}
 
-    public School(String name, boolean enabled) {
+    public School(String name, boolean enabled, List<Grade> grades) {
         this.name = name;
         this.enabled = enabled;
+        this.grades = grades;
     }
 
     public String getName() {
@@ -60,11 +68,11 @@ public class School {
         this.userList = userList;
     }
 
-    public Set<Grade> getGradeList() {
-        return gradeList;
+    public List<Grade> getGrades() {
+        return grades;
     }
 
-    public void setGradeList(Set<Grade> gradeList) {
-        this.gradeList = gradeList;
+    public void setGrades(List<Grade> grades) {
+        this.grades = grades;
     }
 }

@@ -28,10 +28,11 @@ public class User implements UserDetails {
     Boolean enabled;
     String firstName;
     String surname;
+    @Enumerated(EnumType.STRING)
     Role role;
     @ManyToOne(fetch = FetchType.EAGER, optional = true)
     School school;
-    @ManyToOne(fetch = FetchType.EAGER, optional = true)
+    @Enumerated(EnumType.STRING)
     Grade grade;
 
     public User() {};
@@ -182,6 +183,14 @@ public class User implements UserDetails {
 
     public void setSchool(School school) {
         this.school = school;
+    }
+
+    public Grade getGrade() {
+        return grade;
+    }
+
+    public void setGrade(Grade grade) {
+        this.grade = grade;
     }
 }
 

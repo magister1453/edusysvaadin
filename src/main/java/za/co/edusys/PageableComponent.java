@@ -27,7 +27,7 @@ public class PageableComponent extends VerticalLayout{
     private Button lastButton;
     private ComboBox pageComboBox;
     private TextField searchField;
-    private int numPerPage = 2;
+    private int numPerPage = 5;
     private int thisPage = 0;
     private Component dataComponent;
     private JpaRepository repository;
@@ -44,7 +44,7 @@ public class PageableComponent extends VerticalLayout{
                 ((MGrid)this.dataComponent).setRows(Utils.getDataForGenericRepo(repository, new PageRequest(thisPage, numPerPage), ""));
             }
         });
-        pageComboBox = new ComboBox("Number of items per page", Arrays.asList(2,5,10,20,50));
+        pageComboBox = new ComboBox("Number of items per page", Arrays.asList(5,10,20,50));
         pageComboBox.setValue(numPerPage);
         pageComboBox.addValueChangeListener( valueChangeEvent -> {
             thisPage = 0;

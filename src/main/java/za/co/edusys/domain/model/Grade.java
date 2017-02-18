@@ -1,66 +1,22 @@
 package za.co.edusys.domain.model;
 
-import javax.persistence.*;
-import java.util.Set;
-
-@Entity
-public class Grade {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    Long id;
-    String name;
-    boolean enabled;
-    @ManyToOne(fetch = FetchType.EAGER, optional = true)
-    School school;
-    @OneToMany(mappedBy = "grade")
-    Set<User> userList;
-
-    public Grade(){}
-
-    public Grade(String name, boolean enabled) {
-        this.name = name;
-        this.enabled = enabled;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    public Long getId() {
-
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Set<User> getUserList() {
-        return userList;
-    }
-
-    public void setUserList(Set<User> userList) {
-        this.userList = userList;
-    }
-
-    public School getSchool() {
-        return school;
-    }
-
-    public void setSchool(School school) {
-        this.school = school;
-    }
+/**
+ * Created by marc.marais on 2017/02/13.
+ */
+public enum Grade {
+    Grade_RR,
+    Grade_R,
+    Grade_0,
+    Grade_1,
+    Grade_2,
+    Grade_3,
+    Grade_4,
+    Grade_5,
+    Grade_6,
+    Grade_7,
+    Grade_8,
+    Grade_9,
+    Grade_10,
+    Grade_11,
+    Grade_12,
 }

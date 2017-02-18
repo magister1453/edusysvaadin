@@ -1,5 +1,6 @@
 package za.co.edusys;
 
+import com.vaadin.ui.Component;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -32,5 +33,9 @@ public class Utils {
         }
         else
             return new ArrayList();
+    }
+
+    public static void switchVisible(List<Component> components){
+        components.stream().forEach(component -> component.setVisible(!component.isVisible()));
     }
 }

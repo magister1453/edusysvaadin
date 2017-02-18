@@ -5,22 +5,21 @@ import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.spring.annotation.SpringView;
 import com.vaadin.ui.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.fields.MTextField;
 import org.vaadin.viritin.grid.MGrid;
 import org.vaadin.viritin.layouts.MFormLayout;
 import za.co.edusys.PageableComponent;
-import za.co.edusys.domain.model.Role;
+import za.co.edusys.Utils;
+import za.co.edusys.domain.model.Grade;
 import za.co.edusys.domain.model.School;
-import za.co.edusys.domain.model.User;
 import za.co.edusys.domain.repository.SchoolRepository;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Created by marc.marais on 2017/02/10.
@@ -36,6 +35,8 @@ public class SchoolView extends VerticalLayout implements View {
     private MGrid<School> schoolListGrid;
     private PageableComponent pageableComponent;
     private MTextField nameField;
+    private TwinColSelect gradeTwinColSelect;
+    private MButton createSchool = new MButton("Create School", this::createSchool);
 
     @PostConstruct
     void init() {
@@ -54,18 +55,17 @@ public class SchoolView extends VerticalLayout implements View {
         });
         pageableComponent = new PageableComponent(schoolListGrid, schoolRepository);
         addComponent(pageableComponent);
-        addComponent(new Button("Create School", this::createSchool));
-        addComponent(initUserForm());
+        addComponent(createSchool);
+        addComponent(initSchoolForm());
     }
 
     private void showSchoolDetails(School school){
-        schoolForm.setVisible(true);
+        Utils.switchVisible(Arrays.asList(schoolForm, pageableComponent, createSchool));
         getUI().setFocusedComponent(nameField);
-        if(school != null) {
-            nameField.setValue(school.getName());
-        } else {
-            nameField.setValue("");
-        }
+        nameField.setValue(school != null ? school.getName() : "");
+        gradeTwinColSelect.removeAllItems();
+        gradeTwinColSelect.addItems(Grade.values());
+        gradeTwinColSelect.setValue(school != null ? school.getGrades() : "");
     }
 
     private void createSchool(Button.ClickEvent e){
@@ -73,29 +73,36 @@ public class SchoolView extends VerticalLayout implements View {
         showSchoolDetails(null);
     }
 
-    private FormLayout initUserForm(){
+    private FormLayout initSchoolForm(){
         nameField = new MTextField("Name:").withRequired(true);
-        schoolForm = new MFormLayout(nameField, new MButton("Save",this::addEditSchool), new MButton("Cancel", this::cancelSchool)).withVisible(false);
+        gradeTwinColSelect = new TwinColSelect("Select Grades:");
+        gradeTwinColSelect.addItems(Grade.values());
+        schoolForm = new MFormLayout(nameField, gradeTwinColSelect, new MButton("Save",this::addEditSchool), new MButton("Cancel", this::cancelSchool)).withVisible(false);
         return schoolForm;
     }
 
     private void addEditSchool(Button.ClickEvent e){
         if(selectedSchool == null){
-            School newSchool = new School(nameField.getValue(), true);
+            List<Grade> gradeList = new ArrayList<>();
+            gradeList.addAll((Collection) gradeTwinColSelect.getValue());
+            School newSchool = new School(nameField.getValue(), true, gradeList);
             schoolRepository.save(newSchool);
             Notification.show("School " + newSchool.getName() + " succesfully created.");
         } else {
             School updatedSchool = schoolRepository.findOne(selectedSchool.getId());
             updatedSchool.setName(nameField.getValue());
+            List<Grade> gradeList = new ArrayList<>();
+            gradeList.addAll((Collection) gradeTwinColSelect.getValue());
+            updatedSchool.setGrades(gradeList);
             schoolRepository.save(updatedSchool);
             Notification.show("School " + updatedSchool.getName() + " succesfully updated.");
         }
         pageableComponent.refreshData();
-        schoolForm.setVisible(false);
+        Utils.switchVisible(Arrays.asList(schoolForm, pageableComponent, createSchool));
     }
 
     private void cancelSchool(Button.ClickEvent e){
-        schoolForm.setVisible(false);
+        Utils.switchVisible(Arrays.asList(schoolForm, pageableComponent, createSchool));
     }
 
     @Override

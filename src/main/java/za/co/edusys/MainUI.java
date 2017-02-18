@@ -13,8 +13,15 @@ import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.label.MLabel;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
+import za.co.edusys.domain.model.MenuItem;
+import za.co.edusys.domain.model.Role;
+import za.co.edusys.domain.model.User;
+import za.co.edusys.domain.repository.MenuItemRepository;
 import za.co.edusys.views.user.SchoolView;
 import za.co.edusys.views.user.UserView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.vaadin.ui.themes.ValoTheme.BUTTON_LINK;
 
@@ -30,6 +37,8 @@ public class MainUI extends UI{
     public VerticalLayout dataLayout;
     @Autowired
     SpringViewProvider viewProvider;
+    @Autowired
+    MenuItemRepository menuItemRepository;
 
     @Override
     protected void init(VaadinRequest vaadinRequest) {
@@ -51,7 +60,7 @@ public class MainUI extends UI{
 
     public HorizontalLayout initMain(){
         Accordion accordionMenu = initAccordianMenu();
-        dataLayout = new MVerticalLayout().withFullHeight().withFullWidth();
+        dataLayout = new MVerticalLayout().withHeight("3000px").withFullWidth();
         UserView userView = new UserView();
         dataLayout.addComponent(userView);
         navigator = new Navigator(this, dataLayout);
@@ -68,10 +77,10 @@ public class MainUI extends UI{
 
     private Accordion initAccordianMenu() {
         Accordion accordion = new Accordion();
-        Layout tab1 = new VerticalLayout(
-                new MButton("User Admin", (e -> getUI().getNavigator().navigateTo("user"))).withStyleName(BUTTON_LINK),
-                new MButton("School Admin", (e -> getUI().getNavigator().navigateTo("school"))).withStyleName(BUTTON_LINK),
-                new MButton("Main Admin", (e -> getUI().getNavigator().navigateTo(""))).withStyleName(BUTTON_LINK));
+        User user = (User)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Layout tab1 = new VerticalLayout();
+        menuItemRepository.findAllByRoles(user.getRole()).forEach(
+                menuItem -> tab1.addComponent(new MButton(menuItem.getName(), (e -> getUI().getNavigator().navigateTo(menuItem.getRoute()))).withStyleName(BUTTON_LINK)));
         accordion.addTab(tab1, "Main Tab");
         accordion.setWidth("20%");
         accordion.setResponsive(true);
