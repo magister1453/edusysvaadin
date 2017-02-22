@@ -8,6 +8,8 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import za.co.edusys.domain.model.Grade;
+import za.co.edusys.domain.model.Role;
 import za.co.edusys.domain.model.School;
 import za.co.edusys.domain.model.User;
 
@@ -17,7 +19,10 @@ import java.util.List;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     User findUserByUserName(String userName);
+    User findUserByFirstNameAndSurname(String firstName,String surname);
+    List<User> findAllByRoleAndSchool(Role role, School school);
     List<User> findBySurnameContainingOrFirstNameContaining(String surname, String firstName, Pageable pageable);
+    List<User> findByRoleAndGradeAndSchool(Role role, Grade grade, School school);
     @Query("SELECT u from User u left join u.school school where school = :school and (u.surname like :surname or u.firstName like :firstName)")
     List<User> getAdminUsers(@Param("school") School school, @Param("surname") String surname, @Param("firstName") String firstName, Pageable pageable);
 }

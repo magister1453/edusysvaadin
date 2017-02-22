@@ -17,6 +17,7 @@ import za.co.edusys.domain.model.MenuItem;
 import za.co.edusys.domain.model.Role;
 import za.co.edusys.domain.model.User;
 import za.co.edusys.domain.repository.MenuItemRepository;
+import za.co.edusys.views.user.ClassView;
 import za.co.edusys.views.user.SchoolView;
 import za.co.edusys.views.user.UserView;
 
@@ -34,6 +35,7 @@ public class MainUI extends UI{
     public static Navigator navigator;
     public static final String USER_VIEW = "/user";
     public static final String SCHOOL_VIEW = "/school";
+    public static final String CLASS_VIEW = "/class";
     public VerticalLayout dataLayout;
     @Autowired
     SpringViewProvider viewProvider;
@@ -66,6 +68,7 @@ public class MainUI extends UI{
         navigator = new Navigator(this, dataLayout);
         navigator.addView(USER_VIEW, new UserView());
         navigator.addView(SCHOOL_VIEW, new SchoolView());
+        navigator.addView(CLASS_VIEW, new ClassView());
         navigator.addProvider(viewProvider);
         Label rightLabel = new MLabel("This is the right label").withWidth("20%").withFullHeight();
         HorizontalLayout horizontalLayout = new MHorizontalLayout(accordionMenu, dataLayout, rightLabel).withHeight("600px").withFullWidth();

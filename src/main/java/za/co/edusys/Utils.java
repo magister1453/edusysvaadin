@@ -8,6 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import za.co.edusys.domain.model.Role;
 import za.co.edusys.domain.model.School;
 import za.co.edusys.domain.model.User;
+import za.co.edusys.domain.repository.ClassRepository;
 import za.co.edusys.domain.repository.SchoolRepository;
 import za.co.edusys.domain.repository.UserRepository;
 
@@ -30,6 +31,13 @@ public class Utils {
         }
         else if (repository instanceof SchoolRepository) {
             return ((SchoolRepository) repository).findByNameContainingIgnoreCase((String)searchParam[0], paginationParam);
+        }
+        else if (repository instanceof ClassRepository) {
+            User loggedInUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if(loggedInUser.getRole().equals(Role.SUPERADMIN))
+                return ((ClassRepository)repository).findAll();
+            else
+                return ((ClassRepository)repository).findAllBySchool(loggedInUser.getSchool(), paginationParam);
         }
         else
             return new ArrayList();

@@ -13,6 +13,7 @@ import za.co.edusys.PageableComponent;
 import za.co.edusys.Utils;
 import za.co.edusys.domain.model.Grade;
 import za.co.edusys.domain.model.School;
+import za.co.edusys.domain.model.Subject;
 import za.co.edusys.domain.repository.SchoolRepository;
 
 import javax.annotation.PostConstruct;
@@ -36,6 +37,7 @@ public class SchoolView extends VerticalLayout implements View {
     private PageableComponent pageableComponent;
     private MTextField nameField;
     private TwinColSelect gradeTwinColSelect;
+    private TwinColSelect subjectTwinColSelect;
     private MButton createSchool = new MButton("Create School", this::createSchool);
 
     @PostConstruct
@@ -51,7 +53,7 @@ public class SchoolView extends VerticalLayout implements View {
                 showSchoolDetails(selectedSchool);
             }
             else
-                Notification.show("Nothing selected");
+        Notification.show("Nothing selected");
         });
         pageableComponent = new PageableComponent(schoolListGrid, schoolRepository);
         addComponent(pageableComponent);
@@ -66,6 +68,9 @@ public class SchoolView extends VerticalLayout implements View {
         gradeTwinColSelect.removeAllItems();
         gradeTwinColSelect.addItems(Grade.values());
         gradeTwinColSelect.setValue(school != null ? school.getGrades() : "");
+        subjectTwinColSelect.removeAllItems();
+        subjectTwinColSelect.addItems(Subject.values());
+        subjectTwinColSelect.setValue(school != null ? school.getSubjects() : "");
     }
 
     private void createSchool(Button.ClickEvent e){
@@ -77,23 +82,27 @@ public class SchoolView extends VerticalLayout implements View {
         nameField = new MTextField("Name:").withRequired(true);
         gradeTwinColSelect = new TwinColSelect("Select Grades:");
         gradeTwinColSelect.addItems(Grade.values());
-        schoolForm = new MFormLayout(nameField, gradeTwinColSelect, new MButton("Save",this::addEditSchool), new MButton("Cancel", this::cancelSchool)).withVisible(false);
+        subjectTwinColSelect = new TwinColSelect("Select Subjects:");
+        subjectTwinColSelect.addItems(Subject.values());
+        schoolForm = new MFormLayout(nameField, gradeTwinColSelect, subjectTwinColSelect, new MButton("Save",this::addEditSchool),
+                new MButton("Cancel", this::cancelSchool)).withVisible(false);
         return schoolForm;
     }
 
     private void addEditSchool(Button.ClickEvent e){
+        List<Grade> gradeList = new ArrayList<>();
+        List<Subject> subjectList = new ArrayList<>();
+        gradeList.addAll((Collection) gradeTwinColSelect.getValue());
+        subjectList.addAll((Collection) subjectTwinColSelect.getValue());
         if(selectedSchool == null){
-            List<Grade> gradeList = new ArrayList<>();
-            gradeList.addAll((Collection) gradeTwinColSelect.getValue());
-            School newSchool = new School(nameField.getValue(), true, gradeList);
+            School newSchool = new School(nameField.getValue(), true, gradeList, subjectList);
             schoolRepository.save(newSchool);
             Notification.show("School " + newSchool.getName() + " succesfully created.");
         } else {
             School updatedSchool = schoolRepository.findOne(selectedSchool.getId());
             updatedSchool.setName(nameField.getValue());
-            List<Grade> gradeList = new ArrayList<>();
-            gradeList.addAll((Collection) gradeTwinColSelect.getValue());
             updatedSchool.setGrades(gradeList);
+            updatedSchool.setSubjects(subjectList);
             schoolRepository.save(updatedSchool);
             Notification.show("School " + updatedSchool.getName() + " succesfully updated.");
         }
@@ -103,6 +112,7 @@ public class SchoolView extends VerticalLayout implements View {
 
     private void cancelSchool(Button.ClickEvent e){
         Utils.switchVisible(Arrays.asList(schoolForm, pageableComponent, createSchool));
+        schoolListGrid.deselectAll();
     }
 
     @Override

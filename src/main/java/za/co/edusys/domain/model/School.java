@@ -25,14 +25,20 @@ public class School {
     @CollectionTable(name = "schoolgrade", joinColumns = @JoinColumn(name = "school_id"))
     @Enumerated(EnumType.STRING)
     List<Grade> grades;
+    @LazyCollection(LazyCollectionOption.FALSE)
+    @ElementCollection(targetClass = Subject.class)
+    @CollectionTable(name = "schoolsubject", joinColumns = @JoinColumn(name = "school_id"))
+    @Enumerated(EnumType.STRING)
+    List<Subject> subjects;
 
 
     public School(){}
 
-    public School(String name, boolean enabled, List<Grade> grades) {
+    public School(String name, boolean enabled, List<Grade> grades, List<Subject> subjects) {
         this.name = name;
         this.enabled = enabled;
         this.grades = grades;
+        this.subjects = subjects;
     }
 
     public String getName() {
@@ -74,5 +80,13 @@ public class School {
 
     public void setGrades(List<Grade> grades) {
         this.grades = grades;
+    }
+
+    public List<Subject> getSubjects() {
+        return subjects;
+    }
+
+    public void setSubjects(List<Subject> subjects) {
+        this.subjects = subjects;
     }
 }

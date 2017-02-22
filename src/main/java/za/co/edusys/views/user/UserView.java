@@ -1,5 +1,6 @@
 package za.co.edusys.views.user;
 
+import com.vaadin.data.Property;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.spring.annotation.SpringView;
@@ -52,11 +53,9 @@ public class UserView extends VerticalLayout implements View {
     void init() {
         userListGrid = new MGrid<User>().withProperties("firstName", "surname", "enabled")
                 .withColumnHeaders("First Name", "Surname", "Enabled");
-
         userListGrid.addSelectionListener(selectionEvent -> {
             selectedUser = (User)((Grid.SingleSelectionModel)
                     userListGrid.getSelectionModel()).getSelectedRow();
-
             if (selectedUser != null) {
                 showUserDetails(selectedUser);
             }
@@ -76,10 +75,11 @@ public class UserView extends VerticalLayout implements View {
         firstNameField.setValue(user != null ? user.getFirstName() : "");
         surnameField.setValue(user != null ? user.getSurname() : "");
         userNameField.setValue(user != null ? user.getUsername() : "");
-        gradeComboBox.setValue(user != null ? user.getGrade() : "");
-        roleComboBox.setValue(user != null ? user.getRole() : "");
+        gradeComboBox.select(user != null ? user.getGrade() : null);
+        gradeComboBox.setVisible(false);
+        roleComboBox.select(user != null ? user.getRole() : null);
         if(loggedInUser.getRole().equals(Role.SUPERADMIN))
-            schoolComboBox.setValue(user != null ? user.getSchool() : "");
+            schoolComboBox.select(user != null ? user.getSchool() : null);
     }
 
     private FormLayout initUserForm(){
@@ -92,14 +92,7 @@ public class UserView extends VerticalLayout implements View {
         gradeComboBox.setTextInputAllowed(false);
         roleComboBox = new ComboBox("Role", Arrays.asList(Role.values()));
         roleComboBox.setTextInputAllowed(false);
-        roleComboBox.addValueChangeListener(valueChangeEvent -> {
-            Role selectedRole = (Role)roleComboBox.getValue();
-            if(selectedRole.equals(Role.PUPIL) && !gradeComboBox.isVisible())
-                gradeComboBox.setVisible(true);
-            else if(!selectedRole.equals(Role.PUPIL) && gradeComboBox.isVisible())
-                gradeComboBox.setVisible(false);
-        });
-
+        roleComboBox.addValueChangeListener(this::changeRoleCombobox);
         if(user.getRole().equals(Role.ADMIN)){
             gradeComboBox = new ComboBox("Grade", user.getSchool().getGrades());
             roleComboBox.removeItem(Role.SUPERADMIN);
@@ -110,16 +103,28 @@ public class UserView extends VerticalLayout implements View {
             schoolRepository.findAll().forEach(school -> schoolNames.add(school.getName()));
             schoolComboBox = new ComboBox("School", schoolNames);
             schoolComboBox.setTextInputAllowed(false);
-            schoolComboBox.addValueChangeListener(valueChangeEvent -> {
-                gradeComboBox.removeAllItems();
-                List<Grade> gradeList = schoolRepository.findOneByName((String)valueChangeEvent.getProperty().getValue()).getGrades();
-                Collections.sort(gradeList);
-                gradeComboBox.addItems(gradeList);
-            });
+            schoolComboBox.addValueChangeListener(this::changeSchoolCombobox);
             userForm = new MFormLayout(schoolComboBox, firstNameField, surnameField, userNameField, roleComboBox, gradeComboBox,
                     new MButton("Save",this::addEditUser), new MButton("Cancel", this::cancelUser)).withVisible(false);
         }
         return userForm;
+    }
+
+    private void changeRoleCombobox(Property.ValueChangeEvent valueChangeEvent) {
+        Role selectedRole = (Role)roleComboBox.getValue();
+        if(selectedRole != null && selectedRole.equals(Role.PUPIL) && !gradeComboBox.isVisible())
+            gradeComboBox.setVisible(true);
+        else if(selectedRole != null && !selectedRole.equals(Role.PUPIL) && gradeComboBox.isVisible())
+            gradeComboBox.setVisible(false);
+    }
+
+    private void changeSchoolCombobox(Property.ValueChangeEvent valueChangeEvent) {
+        gradeComboBox.removeAllItems();
+        List<Grade> gradeList = new ArrayList<Grade>();
+        if(valueChangeEvent.getProperty().getValue() != null)
+            gradeList = schoolRepository.findOneByName((String)valueChangeEvent.getProperty().getValue()).getGrades();
+        Collections.sort(gradeList);
+        gradeComboBox.addItems(gradeList);
     }
 
     private void createUser(Button.ClickEvent e){
@@ -129,6 +134,7 @@ public class UserView extends VerticalLayout implements View {
 
     private void cancelUser(Button.ClickEvent e){
         Utils.switchVisible(Arrays.asList(userForm, pageableComponent, createUser));
+        userListGrid.deselectAll();
     }
 
     private void addEditUser(Button.ClickEvent e){
@@ -142,15 +148,8 @@ public class UserView extends VerticalLayout implements View {
                 userSchool = Optional.of(this.schoolRepository.findOneByName((String)schoolComboBox.getValue()));
             if(gradeComboBox.isVisible())
                 selectedGrade = Optional.of((Grade)gradeComboBox.getValue());
-            User newUser = new User(
-                    userNameField.getValue(),
-                    firstNameField.getValue() + 123,
-                    firstNameField.getValue(),
-                    surnameField.getValue(),
-                    (Role)roleComboBox.getValue(),
-                    userSchool,
-                    selectedGrade
-            );
+            User newUser = new User(userNameField.getValue(), firstNameField.getValue() + 123, firstNameField.getValue(), surnameField.getValue(),
+                    (Role)roleComboBox.getValue(), userSchool, selectedGrade);
             userRepository.save(newUser);
             Notification.show("User " + newUser.getFirstName() + " " + newUser.getSurname() + " succesfully created.");
         } else {
@@ -169,6 +168,8 @@ public class UserView extends VerticalLayout implements View {
         updateUser.setUserName(userNameField.getValue());
         updateUser.setRole((Role)roleComboBox.getValue());
         updateUser.setSchool(this.schoolRepository.findOneByName((String)schoolComboBox.getValue()));
+        if(gradeComboBox.isVisible())
+            updateUser.setGrade((Grade)gradeComboBox.getValue());
         return updateUser;
     }
 
