@@ -21,6 +21,7 @@ import za.co.edusys.domain.repository.UserRepository;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @SpringView(name = "class")
 public class ClassView extends VerticalLayout implements View {
@@ -79,9 +80,7 @@ public class ClassView extends VerticalLayout implements View {
         teacherComboBox.setRequired(true);
         pupilTwinColSelect = new TwinColSelect("Pupil:");
         if(loggedInUser.getRole().equals(Role.SUPERADMIN)) {
-            List<String> schoolNames = new ArrayList<>();
-            schoolRepository.findAll().forEach(school -> schoolNames.add(school.getName()));
-            schoolComboBox = new ComboBox("School", schoolNames);
+            schoolComboBox = new ComboBox("School", schoolRepository.findAll().stream().map(School::getName).collect(Collectors.toList()));
             schoolComboBox.addValueChangeListener(this::setComboBoxesForSchool);
             classForm = new MFormLayout(schoolComboBox, nameField, gradeComboBox, subjectComboBox, teacherComboBox, pupilTwinColSelect,
                     new MButton("Save", this::addEditClass), new MButton("Cancel", this::cancelClass)).withVisible(false);
@@ -89,7 +88,8 @@ public class ClassView extends VerticalLayout implements View {
         else {
             gradeComboBox.addItems(loggedInUser.getSchool().getGrades());
             subjectComboBox.addItems(loggedInUser.getSchool().getSubjects());
-            teacherComboBox.addItems(userRepository.findAllByRoleAndSchool(Role.TEACHER, loggedInUser.getSchool()));
+            teacherComboBox.addItems(userRepository.findAllByRoleAndSchool(
+                    Role.TEACHER, loggedInUser.getSchool()).stream().map(user -> user.getFirstName() + " " + user.getSurname()).collect(Collectors.toList()));
             classForm = new MFormLayout(new Label(loggedInUser.getSchool().getName()), nameField, gradeComboBox, subjectComboBox, teacherComboBox, pupilTwinColSelect,
                     new MButton("Save", this::addEditClass), new MButton("Cancel", this::cancelClass)).withVisible(false);
         }
@@ -102,16 +102,15 @@ public class ClassView extends VerticalLayout implements View {
         subjectComboBox.removeAllItems();
         teacherComboBox.removeAllItems();
         if(valueChangeEvent.getProperty().getValue() != null) {
-            School school = null;
+            School school;
             if(loggedInUser.getRole().equals(Role.SUPERADMIN))
                 school = schoolRepository.findOneByName((String) valueChangeEvent.getProperty().getValue());
             else
                 school = schoolRepository.findOne(loggedInUser.getSchool().getId());
             gradeComboBox.addItems(school.getGrades());
             subjectComboBox.addItems(school.getSubjects());
-            List<String> teacherNames = new ArrayList<>();
-            userRepository.findAllByRoleAndSchool(Role.TEACHER, school).forEach(user -> teacherNames.add(user.getFirstName() + " " + user.getSurname()));
-            teacherComboBox.addItems(teacherNames);
+            teacherComboBox.addItems(userRepository.findAllByRoleAndSchool(Role.TEACHER, school).stream()
+                    .map(user -> user.getFirstName() + " " + user.getSurname()).collect(Collectors.toList()));
         }
     }
 

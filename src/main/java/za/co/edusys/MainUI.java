@@ -4,6 +4,7 @@ import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.navigator.Navigator;
 import com.vaadin.server.VaadinRequest;
+import com.vaadin.server.VaadinSession;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.spring.navigator.SpringViewProvider;
 import com.vaadin.ui.*;
@@ -13,16 +14,20 @@ import org.vaadin.viritin.button.MButton;
 import org.vaadin.viritin.label.MLabel;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import org.vaadin.viritin.layouts.MVerticalLayout;
-import za.co.edusys.domain.model.MenuItem;
-import za.co.edusys.domain.model.Role;
-import za.co.edusys.domain.model.User;
+import za.co.edusys.domain.model.*;
+import za.co.edusys.domain.model.Class;
+import za.co.edusys.domain.repository.ClassRepository;
 import za.co.edusys.domain.repository.MenuItemRepository;
+import za.co.edusys.domain.repository.UserRepository;
 import za.co.edusys.views.user.ClassView;
 import za.co.edusys.views.user.SchoolView;
+import za.co.edusys.views.user.TeacherView;
 import za.co.edusys.views.user.UserView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.TreeMap;
 
 import static com.vaadin.ui.themes.ValoTheme.BUTTON_LINK;
 
@@ -36,11 +41,18 @@ public class MainUI extends UI{
     public static final String USER_VIEW = "/user";
     public static final String SCHOOL_VIEW = "/school";
     public static final String CLASS_VIEW = "/class";
+    public static final String TEACHER_VIEW = "/teacher";
+    private Grade grade = Grade.Grade_0;
+    private Subject subject = Subject.MATHS;
     public VerticalLayout dataLayout;
     @Autowired
     SpringViewProvider viewProvider;
     @Autowired
     MenuItemRepository menuItemRepository;
+    @Autowired
+    ClassRepository classRepository;
+    @Autowired
+    UserRepository userRepository;
 
     @Override
     protected void init(VaadinRequest vaadinRequest) {
@@ -69,6 +81,7 @@ public class MainUI extends UI{
         navigator.addView(USER_VIEW, new UserView());
         navigator.addView(SCHOOL_VIEW, new SchoolView());
         navigator.addView(CLASS_VIEW, new ClassView());
+        navigator.addView(TEACHER_VIEW, new TeacherView());
         navigator.addProvider(viewProvider);
         Label rightLabel = new MLabel("This is the right label").withWidth("20%").withFullHeight();
         HorizontalLayout horizontalLayout = new MHorizontalLayout(accordionMenu, dataLayout, rightLabel).withHeight("600px").withFullWidth();
@@ -84,10 +97,41 @@ public class MainUI extends UI{
         Layout tab1 = new VerticalLayout();
         menuItemRepository.findAllByRoles(user.getRole()).forEach(
                 menuItem -> tab1.addComponent(new MButton(menuItem.getName(), (e -> getUI().getNavigator().navigateTo(menuItem.getRoute()))).withStyleName(BUTTON_LINK)));
-        accordion.addTab(tab1, "Main Tab");
+        accordion.addTab(tab1, "Admin");
+        if(user.getRole().equals(Role.TEACHER)){
+            List<Class> teacherClasses = classRepository.findAllByTeacher(userRepository.findOne(user.getId()));
+            HashMap<String, List<String>> menuMap = new HashMap<>();
+            for(Class aClass : teacherClasses){
+                if(menuMap.containsKey(aClass.getSubject())){
+                    List<String> grades = menuMap.get(aClass.getSubject());
+                    grades.add(aClass.getGrade().getName());
+                } else {
+                    List<String> grades = new ArrayList<>();
+                    grades.add(aClass.getGrade().getName());
+                    menuMap.put(aClass.getSubject().getName(), grades);
+                }
+            }
+            for(String subject: menuMap.keySet()){
+                List<String> grades = menuMap.get(subject);
+                Layout tab = new VerticalLayout();
+
+                grades.stream().forEach(s -> tab.addComponent(new MButton(s, (e -> {
+                    this.subject.setName(subject);
+                    this.grade.setName(s);
+                    getUI().getNavigator().navigateTo("teacher");
+                })).withStyleName(BUTTON_LINK)));
+                accordion.addTab(tab, subject);
+            }
+        }
         accordion.setWidth("20%");
         accordion.setResponsive(true);
         return accordion;
+    }
+
+    public HashMap<String, String> getParameters(){
+        HashMap<String, String> parameters = new HashMap<>();
+        parameters.put(this.subject.getName(), this.grade.getName());
+        return parameters;
     }
 
     public VerticalLayout initFooter(){

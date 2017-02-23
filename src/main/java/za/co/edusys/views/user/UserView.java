@@ -23,6 +23,7 @@ import za.co.edusys.domain.repository.UserRepository;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @SpringView(name = "user")
@@ -99,9 +100,7 @@ public class UserView extends VerticalLayout implements View {
             userForm = new MFormLayout(new Label(user.getSchool().getName()), firstNameField, surnameField, userNameField, roleComboBox, gradeComboBox,
                     new MButton("Save",this::addEditUser), new MButton("Cancel", this::cancelUser)).withVisible(false);
         } else if(user.getRole().equals(Role.SUPERADMIN)) {
-            List<String> schoolNames = new ArrayList<>();
-            schoolRepository.findAll().forEach(school -> schoolNames.add(school.getName()));
-            schoolComboBox = new ComboBox("School", schoolNames);
+            schoolComboBox = new ComboBox("School", schoolRepository.findAll().stream().map(school -> school.getName()).collect(Collectors.toList()));
             schoolComboBox.setTextInputAllowed(false);
             schoolComboBox.addValueChangeListener(this::changeSchoolCombobox);
             userForm = new MFormLayout(schoolComboBox, firstNameField, surnameField, userNameField, roleComboBox, gradeComboBox,
