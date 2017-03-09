@@ -1,4 +1,4 @@
-package za.co.edusys.views.user;
+package za.co.edusys.views;
 
 import com.vaadin.data.Property;
 import com.vaadin.navigator.View;

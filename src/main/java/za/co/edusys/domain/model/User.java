@@ -6,10 +6,12 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
+import za.co.edusys.domain.model.event.EventItem;
 
 import javax.persistence.*;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Entity
 @Component
@@ -34,6 +36,18 @@ public class User implements UserDetails {
     School school;
     @Enumerated(EnumType.STRING)
     Grade grade;
+    @OneToMany(mappedBy = "user")
+    List<EventItem> eventList;
+    @ManyToMany
+    List<Class> classes;
+
+    public List<EventItem> getEventList() {
+        return eventList;
+    }
+
+    public void setEventList(List<EventItem> eventList) {
+        this.eventList = eventList;
+    }
 
     public User() {};
 
@@ -50,7 +64,6 @@ public class User implements UserDetails {
         this.role = role;
         this.school = school.orElse(null);
         this.grade = grade.orElse(null);
-
     }
 
     @Autowired
@@ -191,6 +204,18 @@ public class User implements UserDetails {
 
     public void setGrade(Grade grade) {
         this.grade = grade;
+    }
+
+    public List<Class> getClasses() {
+        return classes;
+    }
+
+    public void setClasses(List<Class> classes) {
+        this.classes = classes;
+    }
+
+    public String getFullName() {
+        return surname + "," + firstName;
     }
 }
 

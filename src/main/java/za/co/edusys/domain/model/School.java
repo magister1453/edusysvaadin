@@ -20,6 +20,8 @@ public class School {
     boolean enabled;
     @OneToMany(mappedBy = "school")
     Set<User> userList;
+    @OneToMany(mappedBy = "school")
+    Set<Term> termList;
     @LazyCollection(LazyCollectionOption.FALSE)
     @ElementCollection(targetClass = Grade.class)
     @CollectionTable(name = "schoolgrade", joinColumns = @JoinColumn(name = "school_id"))
@@ -88,5 +90,13 @@ public class School {
 
     public void setSubjects(List<Subject> subjects) {
         this.subjects = subjects;
+    }
+
+    public Set<Term> getTermList() {
+        return termList;
+    }
+
+    public void setTermList(Set<Term> termList) {
+        this.termList = termList;
     }
 }

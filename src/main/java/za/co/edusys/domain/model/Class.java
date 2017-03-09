@@ -1,6 +1,7 @@
 package za.co.edusys.domain.model;
 
 import org.hibernate.annotations.Fetch;
+import za.co.edusys.domain.model.event.Event;
 
 import javax.persistence.*;
 import java.util.List;
@@ -21,16 +22,19 @@ public class Class {
     Grade grade;
     @ManyToMany(fetch = FetchType.EAGER)
     List<User> pupils;
+    @ManyToMany(mappedBy = "classes")
+    List<Event> events;
 
     public Class(){}
 
-    public Class(String name, School school, User teacher, Subject subject, Grade grade, List<User> pupils){
+    public Class(String name, School school, User teacher, Subject subject, Grade grade, List<User> pupils, List<Event> events){
         this.name = name;
         this.school = school;
         this.teacher = teacher;
         this.subject = subject;
         this.grade = grade;
         this.pupils = pupils;
+        this.events = events;
     }
 
     public Long getId() {
@@ -87,6 +91,14 @@ public class Class {
 
     public void setPupils(List<User> pupils) {
         this.pupils = pupils;
+    }
+
+    public List<Event> getEvents() {
+        return events;
+    }
+
+    public void setEvents(List<Event> events) {
+        this.events = events;
     }
 }
 
