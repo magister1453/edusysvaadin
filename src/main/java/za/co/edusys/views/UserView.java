@@ -20,6 +20,8 @@ import za.co.edusys.domain.model.User;
 import za.co.edusys.domain.repository.AuthorityRepository;
 import za.co.edusys.domain.repository.SchoolRepository;
 import za.co.edusys.domain.repository.UserRepository;
+import za.co.edusys.views.forms.AddressForm;
+import za.co.edusys.views.forms.ContactDetailsForm;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
@@ -45,6 +47,8 @@ public class UserView extends VerticalLayout implements View {
     private TextField firstNameField;
     private TextField surnameField;
     private TextField userNameField;
+    private ContactDetailsForm contactDetailsForm;
+    private AddressForm addressForm;
     private ComboBox roleComboBox;
     private ComboBox schoolComboBox;
     private ComboBox gradeComboBox;
@@ -79,11 +83,15 @@ public class UserView extends VerticalLayout implements View {
         gradeComboBox.select(user != null ? user.getGrade() : null);
         gradeComboBox.setVisible(false);
         roleComboBox.select(user != null ? user.getRole() : null);
+        contactDetailsForm.setValue(user);
+        addressForm.setValue(user);
         if(loggedInUser.getRole().equals(Role.SUPERADMIN))
             schoolComboBox.select(user != null ? user.getSchool() : null);
     }
 
     private FormLayout initUserForm(){
+        contactDetailsForm = new ContactDetailsForm();
+        addressForm = new AddressForm();
         firstNameField = new MTextField("First Name:").withRequired(true);
         surnameField = new MTextField("Surname:").withRequired(true);
         userNameField = new MTextField("User Name:").withRequired(true);
@@ -97,13 +105,13 @@ public class UserView extends VerticalLayout implements View {
         if(user.getRole().equals(Role.ADMIN)){
             gradeComboBox = new ComboBox("Grade", user.getSchool().getGrades());
             roleComboBox.removeItem(Role.SUPERADMIN);
-            userForm = new MFormLayout(new Label(user.getSchool().getName()), firstNameField, surnameField, userNameField, roleComboBox, gradeComboBox,
+            userForm = new MFormLayout(new Label(user.getSchool().getName()), firstNameField, surnameField, userNameField, roleComboBox, gradeComboBox, contactDetailsForm, addressForm,
                     new MButton("Save",this::addEditUser), new MButton("Cancel", this::cancelUser)).withVisible(false);
         } else if(user.getRole().equals(Role.SUPERADMIN)) {
-            schoolComboBox = new ComboBox("School", schoolRepository.findAll().stream().map(school -> school.getName()).collect(Collectors.toList()));
+            schoolComboBox = new ComboBox("School", schoolRepository.findAll().stream().map(School::getName).collect(Collectors.toList()));
             schoolComboBox.setTextInputAllowed(false);
             schoolComboBox.addValueChangeListener(this::changeSchoolCombobox);
-            userForm = new MFormLayout(schoolComboBox, firstNameField, surnameField, userNameField, roleComboBox, gradeComboBox,
+            userForm = new MFormLayout(schoolComboBox, firstNameField, surnameField, userNameField, roleComboBox, gradeComboBox, contactDetailsForm, addressForm,
                     new MButton("Save",this::addEditUser), new MButton("Cancel", this::cancelUser)).withVisible(false);
         }
         return userForm;
@@ -138,17 +146,19 @@ public class UserView extends VerticalLayout implements View {
 
     private void addEditUser(Button.ClickEvent e){
         if(selectedUser == null){
-            Optional<School> userSchool;
-            Optional<Grade> selectedGrade = Optional.empty();
+            School userSchool;
+            Grade selectedGrade = null;
             User loggedInUser = ((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
             if(loggedInUser.getRole().equals(Role.ADMIN))
-                userSchool = Optional.of(((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getSchool());
+                userSchool = ((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getSchool();
             else
-                userSchool = Optional.of(this.schoolRepository.findOneByName((String)schoolComboBox.getValue()));
+                userSchool = this.schoolRepository.findOneByName((String)schoolComboBox.getValue());
             if(gradeComboBox.isVisible())
-                selectedGrade = Optional.of((Grade)gradeComboBox.getValue());
+                selectedGrade = (Grade)gradeComboBox.getValue();
             User newUser = new User(userNameField.getValue(), firstNameField.getValue() + 123, firstNameField.getValue(), surnameField.getValue(),
                     (Role)roleComboBox.getValue(), userSchool, selectedGrade);
+            contactDetailsForm.saveContactDetails(newUser);
+            addressForm.saveAddress(newUser);
             userRepository.save(newUser);
             Notification.show("User " + newUser.getFirstName() + " " + newUser.getSurname() + " succesfully created.");
         } else {
@@ -166,7 +176,10 @@ public class UserView extends VerticalLayout implements View {
         updateUser.setSurname(surnameField.getValue());
         updateUser.setUserName(userNameField.getValue());
         updateUser.setRole((Role)roleComboBox.getValue());
-        updateUser.setSchool(this.schoolRepository.findOneByName((String)schoolComboBox.getValue()));
+        if(schoolComboBox != null)
+            updateUser.setSchool(this.schoolRepository.findOneByName((String)schoolComboBox.getValue()));
+        contactDetailsForm.saveContactDetails(updateUser);
+        addressForm.saveAddress(updateUser);
         if(gradeComboBox.isVisible())
             updateUser.setGrade((Grade)gradeComboBox.getValue());
         return updateUser;

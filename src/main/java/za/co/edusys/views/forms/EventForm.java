@@ -21,6 +21,7 @@ import za.co.edusys.domain.repository.EventItemRepository;
 import za.co.edusys.domain.repository.EventRepository;
 import za.co.edusys.domain.repository.SchoolRepository;
 import za.co.edusys.views.TeacherView;
+import za.co.edusys.views.components.NumberField;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -73,7 +74,7 @@ public class EventForm extends FormLayout {
         classTwinColSelect.addItems(event.getClasses().stream().map(Class::getName).collect(Collectors.toList()).toArray());
 
         if(event.getTotalMarks() != null){
-            initMarkField();
+            markTextField = new NumberField("Total Marks");
             markTextField.setValue(event.getTotalMarks().toString());
         }
         addButton = new MButton("Update Event");
@@ -122,22 +123,12 @@ public class EventForm extends FormLayout {
         eventTypeCombo.setTextInputAllowed(false);
         eventTypeCombo.addValueChangeListener(valueChangeEvent -> {
             if (valueChangeEvent.getProperty().getValue() != EventType.HOMEWORK && !getComponent(4).getCaption().equals("Total Marks")){
-                initMarkField();
+                markTextField = new NumberField("Total Marks");
                 addComponent(markTextField, getComponentIndex(startDate) - 1);
             } else if(valueChangeEvent.getProperty().getValue() == EventType.HOMEWORK) {
                 if(markTextField != null)
                     removeComponent(markTextField);
             }
         });
-    }
-
-    private void initMarkField() {
-        markTextField = new MTextField("Total Marks");
-        markTextField.addValueChangeListener(valueChangeEvent -> {
-            String value = (String)valueChangeEvent.getProperty().getValue();
-            if(!value.chars().allMatch(Character::isDigit))
-                markTextField.setValue(markTextField.getValue().substring(0, markTextField.getValue().length() - 1));
-        });
-        markTextField.setTextChangeEventMode(AbstractTextField.TextChangeEventMode.EAGER);
     }
 }

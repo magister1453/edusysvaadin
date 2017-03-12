@@ -6,6 +6,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
+import za.co.edusys.domain.model.details.Address;
+import za.co.edusys.domain.model.details.ContactDetails;
 import za.co.edusys.domain.model.event.EventItem;
 
 import javax.persistence.*;
@@ -21,25 +23,47 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.AUTO)
     Long id;
     @ManyToMany(fetch = FetchType.EAGER)
-    List<Authorities> authorities;
-    String password;
-    String userName;
-    Boolean accountNonExpired;
-    Boolean accountNonLocked;
-    Boolean credentialsNonExpired;
-    Boolean enabled;
-    String firstName;
-    String surname;
+    private List<Authorities> authorities;
+    private String password;
+    private String userName;
+    private Boolean accountNonExpired;
+    private Boolean accountNonLocked;
+    private Boolean credentialsNonExpired;
+    private Boolean enabled;
+    private String firstName;
+    private String surname;
     @Enumerated(EnumType.STRING)
-    Role role;
+    private Role role;
     @ManyToOne(fetch = FetchType.EAGER, optional = true)
-    School school;
+    private School school;
     @Enumerated(EnumType.STRING)
-    Grade grade;
+    private Grade grade;
     @OneToMany(mappedBy = "user")
-    List<EventItem> eventList;
+    private List<EventItem> eventList;
     @ManyToMany
-    List<Class> classes;
+    private List<Class> classes;
+    @Embedded
+    private ContactDetails contactDetails;
+
+    public User(String password, String userName, String firstName, String surname, Role role, School school, Grade grade, ContactDetails contactDetails, Address address) {
+        this.accountNonExpired = true;
+        this.accountNonLocked = true;
+        this.credentialsNonExpired = true;
+        this.enabled = true;
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        this.password = encoder.encode(password);
+        this.userName = userName;
+        this.firstName = firstName;
+        this.surname = surname;
+        this.role = role;
+        this.school = school;
+        this.grade = grade;
+        this.contactDetails = contactDetails;
+        this.address = address;
+    }
+
+    @Embedded
+    private Address address;
 
     public List<EventItem> getEventList() {
         return eventList;
@@ -51,7 +75,7 @@ public class User implements UserDetails {
 
     public User() {};
 
-    public User(String userName, String password, String firstName, String surname, Role role, Optional<School> school, Optional<Grade> grade){
+    public User(String userName, String password, String firstName, String surname, Role role, School school, Grade grade){
         this.accountNonExpired = true;
         this.accountNonLocked = true;
         this.credentialsNonExpired = true;
@@ -62,8 +86,10 @@ public class User implements UserDetails {
         this.firstName = firstName;
         this.surname = surname;
         this.role = role;
-        this.school = school.orElse(null);
-        this.grade = grade.orElse(null);
+        this.school = school;
+        this.grade = grade;
+        contactDetails = new ContactDetails("","","","");
+        address = new Address("","","","","","");
     }
 
     @Autowired
@@ -216,6 +242,22 @@ public class User implements UserDetails {
 
     public String getFullName() {
         return surname + "," + firstName;
+    }
+
+    public ContactDetails getContactDetails() {
+        return contactDetails;
+    }
+
+    public void setContactDetails(ContactDetails contactDetails) {
+        this.contactDetails = contactDetails;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
     }
 }
 

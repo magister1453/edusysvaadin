@@ -12,11 +12,13 @@ import org.vaadin.alump.labelbutton.LabelButton;
 import org.vaadin.alump.labelbutton.LabelClickEvent;
 import org.vaadin.alump.labelbutton.LabelClickListener;
 import org.vaadin.viritin.button.MButton;
+import org.vaadin.viritin.fields.MTextField;
 import org.vaadin.viritin.label.MLabel;
 import org.vaadin.viritin.layouts.MGridLayout;
 import org.vaadin.viritin.layouts.MHorizontalLayout;
 import za.co.edusys.domain.model.*;
 import za.co.edusys.domain.model.Class;
+import za.co.edusys.domain.model.event.EventItem;
 import za.co.edusys.domain.repository.*;
 import za.co.edusys.views.forms.EventForm;
 
@@ -100,11 +102,27 @@ public class TeacherView extends VerticalLayout implements View {
         });
 
         aClass.getPupils().forEach(user -> {
-            markGrid.add(new MLabel(user.getFullName()));
+            Button pupilButton = new MButton(user.getFullName()).withStyleName(BUTTON_LINK);
+            markGrid.add(pupilButton);
             eventList.forEach(event -> {
-                Label resultLabel = new MLabel(eventItemRepository.findByUserAndEvent(user, event).findAny().orElse(null).getResult());
-                markGrid.addComponent(resultLabel);
-                markGrid.setComponentAlignment(resultLabel, Alignment.MIDDLE_CENTER);
+                EventItem eventItem = eventItemRepository.findByUserAndEvent(user, event).findAny().orElse(null);
+                Button resultButton = new MButton(eventItem.getResult()).withStyleName(BUTTON_LINK).withFullHeight().withFullWidth();
+                resultButton.addClickListener(clickEvent -> {
+                    GridLayout.Area area = markGrid.getComponentArea(resultButton);
+                    markGrid.removeComponent(resultButton);
+                    TextField resultField = new MTextField().withValue(resultButton.getCaption());
+                    getUI().setFocusedComponent(resultField);
+                    resultField.addBlurListener(blurEvent -> {
+                        resultButton.setCaption(resultField.getValue());
+                        markGrid.removeComponent(resultField);
+                        eventItem.setResult(resultField.getValue());
+                        eventItemRepository.save(eventItem);
+                        markGrid.addComponent(resultButton, area.getColumn1(), area.getRow1());
+                    });
+                    markGrid.addComponent(resultField, area.getColumn1(), area.getRow1());
+                });
+                markGrid.addComponent(resultButton);
+                markGrid.setComponentAlignment(resultButton, Alignment.MIDDLE_CENTER);
             });
         });
 

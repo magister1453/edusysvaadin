@@ -6,6 +6,8 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 import za.co.edusys.domain.model.*;
 import za.co.edusys.domain.model.Class;
+import za.co.edusys.domain.model.details.Address;
+import za.co.edusys.domain.model.details.ContactDetails;
 import za.co.edusys.domain.model.event.Event;
 import za.co.edusys.domain.model.event.EventItem;
 import za.co.edusys.domain.model.event.EventStatus;
@@ -54,13 +56,15 @@ public class DataLoader implements ApplicationRunner {
         schoolRepository.save(new School("Crawford College Benmore", true, Grade.getHighSchool(), Arrays.asList(Subject.values())));
         termRepository.save(new Term("Term 1", LocalDate.of(2017,2,1), LocalDate.of(2017,4,1), schoolRepository.findOneByName("RedHill High School")));
         termRepository.save(new Term("Term 1", LocalDate.of(2017,2,1), LocalDate.of(2017,4,1), schoolRepository.findOneByName("Crawford College Benmore")));
-        userRepository.save(new User("admin", "admin", "admin", "admin", Role.ADMIN, Optional.of(schoolRepository.findOne(1L)), Optional.empty()));
-        userRepository.save(new User("superadmin", "superadmin", "superadmin", "superadmin", Role.SUPERADMIN, Optional.empty(), Optional.empty()));
-        userRepository.save(new User("MarcTest", "marctest", "Marc", "Marais", Role.ADMIN, Optional.of(schoolRepository.findOne(1L)), Optional.empty()));
-        userRepository.save(new User("Test1", "1", "Test1", "Test1", Role.TEACHER, Optional.of(schoolRepository.findOne(1L)), Optional.empty()));
-        userRepository.save(new User("Test2", "2", "Test2", "Test2", Role.PARENT, Optional.empty(), Optional.empty()));
-        userRepository.save(new User("Test3", "3", "Test3", "Test3", Role.PUPIL, Optional.of(schoolRepository.findOne(1L)), Optional.of(Grade.Grade_10)));
-        userRepository.save(new User("Test4", "4", "Test4", "Test4", Role.PUPIL, Optional.of(schoolRepository.findOne(1L)), Optional.of(Grade.Grade_10)));
+        userRepository.save(new User("admin", "admin", "admin", "admin", Role.ADMIN, schoolRepository.findOne(1L), null,
+                new ContactDetails("0116781000","0116781000","0116781000","0116781000"),
+                new Address("137A Cedar Place", null, "Northcliff", "Randburg", "South Africa", "2196")));
+        userRepository.save(new User("superadmin", "superadmin", "superadmin", "superadmin", Role.SUPERADMIN, null, null));
+        userRepository.save(new User("MarcTest", "marctest", "Marc", "Marais", Role.ADMIN, schoolRepository.findOne(1L), null));
+        userRepository.save(new User("Test1", "1", "Test1", "Test1", Role.TEACHER, schoolRepository.findOne(1L), null));
+        userRepository.save(new User("Test2", "2", "Test2", "Test2", Role.PARENT, null, null));
+        userRepository.save(new User("Test3", "3", "Test3", "Test3", Role.PUPIL, schoolRepository.findOne(1L), Grade.Grade_10));
+        userRepository.save(new User("Test4", "4", "Test4", "Test4", Role.PUPIL, schoolRepository.findOne(1L), Grade.Grade_10));
         classRepository.save(new Class("Class A", schoolRepository.findOne(1L), userRepository.findOne(4L), Subject.ENGLISH, Grade.Grade_10,
                 Arrays.asList(userRepository.findOne(6L), userRepository.findOne(7L)), null));
         eventRepository.save(new Event("Test 1", EventType.TEST, Arrays.asList(EventStatus.values()), EventStatus.CLOSED, "Test 1",
